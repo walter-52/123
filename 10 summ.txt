@@ -1,0 +1,75 @@
+// Пины для сегментов дисплея
+const int segmentPins[7] = {3, 4, 5, 6, 7, 8, 9};
+
+// Пин для кнопки
+const int buttonPin = 2;
+
+// Переменные для работы с кнопкой
+int buttonState;             // текущее состояние кнопки
+int lastButtonState = LOW;   // предыдущее состояние кнопки
+unsigned long lastDebounceTime = 0;  // время последнего изменения состояния
+unsigned long debounceDelay = 50;    // задержка для защиты от дребезга
+
+// Переменная для хранения текущего значения счётчика
+int counter = 0;
+
+// Таблица символов для семисегментного дисплея
+const byte digitTable[10][7] = {
+  {HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, LOW},   // 0
+  {LOW, HIGH, HIGH, LOW, LOW, LOW, LOW},       // 1
+  {HIGH, HIGH, LOW, HIGH, HIGH, LOW, HIGH},    // 2
+  {HIGH, HIGH, HIGH, HIGH, LOW, LOW, HIGH},    // 3
+  {LOW, HIGH, HIGH, LOW, LOW, HIGH, HIGH},     // 4
+  {HIGH, LOW, HIGH, HIGH, LOW, HIGH, HIGH},    // 5
+  {HIGH, LOW, HIGH, HIGH, HIGH, HIGH, HIGH},   // 6
+  {HIGH, HIGH, HIGH, LOW, LOW, LOW, LOW},      // 7
+  {HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH},  // 8
+  {HIGH, HIGH, HIGH, HIGH, LOW, HIGH, HIGH}    // 9
+};
+
+void setup() {
+  // Установим пины для сегментов как выходы
+  for (int i = 0; i < 7; i++) {
+    pinMode(segmentPins[i], OUTPUT);
+  }
+
+  // Установим пин кнопки как вход
+  pinMode(buttonPin, INPUT);
+
+  // Инициализируем серийное соединение (для отладки)
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Читаем состояние кнопки
+  int reading = digitalRead(buttonPin);
+
+  // Проверка на дребезг
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      // Если кнопка была нажата
+      if (buttonState == HIGH) {
+        counter++;
+        if (counter >= 10) {
+          counter = 0;
+        }
+        displayDigit(counter);
+      }
+    }
+  }
+
+  lastButtonState = reading;
+}
+
+// Функция для отображения цифры на семисегментном дисплее
+void displayDigit(int digit) {
+  for (int i = 0; i < 7; i++) {
+    digitalWrite(segmentPins[i], digitTable[digit][i]);
+  }
+}
